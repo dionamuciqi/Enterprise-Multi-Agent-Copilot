@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from retrieval.vector_store import index_documents, retrieve
 
 print("Indexing documents...")
