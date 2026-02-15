@@ -1,11 +1,15 @@
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
-from langchain_openai import ChatOpenAI
 
-from retrieval.vector_store import retrieve
+from agents.planner import run_planner
+from agents.researcher import run_research
+from agents.writer import run_writer
+from agents.verifier import run_verifier
+from dotenv import load_dotenv
+load_dotenv()
 
 
-# --- STATE ---
+
 class AgentState(TypedDict):
     question: str
     plan: str
@@ -15,57 +19,34 @@ class AgentState(TypedDict):
     final_answer: str
 
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-
-# --- NODES ---
-
 def planner(state: AgentState):
-    prompt = f"""
-    Create a short action plan to answer this question:
-    {state['question']}
-    """
-    plan = llm.invoke(prompt).content
+    plan = run_planner(state["question"])
     return {"plan": plan}
 
 
 def researcher(state: AgentState):
-    docs = retrieve(state["question"], k=5)
+    docs = run_research(state["question"], k=5)
     return {"research": docs}
 
 
 def writer(state: AgentState):
-    evidence_text = "\n\n".join(
-        [f"{d['text']}\n(Source: {d['source']} p.{d['page']})"
-         for d in state["research"]]
-    )
-
-    prompt = f"""
-    Using ONLY the following evidence, write a structured answer.
-
-    {evidence_text}
-
-    Question:
-    {state['question']}
-    """
-
-    draft = llm.invoke(prompt).content
+    draft = run_writer(state["question"], state["research"])
     return {"draft": draft}
 
 
 def verifier(state: AgentState):
-    verified = "Source:" in state["draft"]
+    verified = run_verifier(state["draft"])
     return {"verified": verified}
 
 
 def deliver(state: AgentState):
+    # nëse s’është verified, mund ta kthejmë prapë te writer më vonë
     return {"final_answer": state["draft"]}
 
 
-# --- GRAPH ---
-
 def build_graph():
     graph = StateGraph(AgentState)
+
     graph.add_node("planner", planner)
     graph.add_node("researcher", researcher)
     graph.add_node("writer", writer)
