@@ -1,45 +1,52 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-def run_writer(question: str, research):
-    evidence_blocks = []
 
-    for d in research:
-        tag = f"[{d['source']} p.{d['page']} {d['chunk_id']}]"
-        evidence_blocks.append(f"{tag}\n{d['text']}")
-
-    evidence_text = "\n\n---\n\n".join(evidence_blocks)
+def run_writer(question: str, research: list):
+    context = "\n\n".join([
+        f"[{r['source']} p.{r['page']} {r['chunk_id']}]\n{r['text']}"
+        for r in research
+    ])
 
     prompt = f"""
-You are an AI strategy consultant writing a client-ready hospital advisory report.
+You are an enterprise healthcare AI consultant.
 
-STRICT RULES:
-- Use ONLY the evidence below.
-- Every section must include citation tags exactly like: [DocumentName p.X chunk_Y]
-- If something cannot be supported, write: "Not found in sources."
-- Executive Summary must be MAX 150 words.
+CRITICAL CITATION RULES:
+- Use ONLY citation tags that appear in the Context EXACTLY as written.
+- NEVER write [source ...]. NEVER invent citation tags.
+- Every factual claim must have an inline citation tag.
 
-FORMAT YOUR OUTPUT EXACTLY AS:
+You must produce a structured response with the following sections:
 
-1. Executive Summary (≤150 words)
+1. Executive Summary (MAX 150 words)
+   - STRICT LIMIT: 150 words maximum.
+   - If longer than 150 words, rewrite until it is <=150 words.
+   - Must include inline citation tags like [HIMSS_AI_Adoption_Hospitals.pdf p.1 chunk_576].
 
-2. Recommended Actions (bullet points)
+2. Client-ready Email
+   - Professional tone
+   - Subject line
+   - Clear greeting and closing
 
-3. Key Risks and Mitigation
+3. Action List
+   - Table with columns: Owner | Due Date | Confidence
 
-4. Implementation Roadmap (Owner | Timeline | Confidence Level)
+4. Key Risks and Mitigation
+   - Bullet format
+   - Grounded in provided sources
 
-5. Sources (list citation tags used)
+5. Sources
+   - List all citation tags used (must match tags from Context)
 
-EVIDENCE:
-{evidence_text}
+Only use information from the context below.
+Do not invent facts.
+Do not fabricate citations.
 
-QUESTION:
+Context:
+{context}
+
+Question:
 {question}
 """
-
     return llm.invoke(prompt).content
