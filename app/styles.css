@@ -1,0 +1,230 @@
+:root{
+  --bg:#f6f7fb;
+  --panel:#ffffff;
+  --panel2:#fbfbfe;
+  --stroke:#e7e8ef;
+  --stroke2:#dfe2ea;
+
+  --text:#111827;     /* slate-900 */
+  --muted:#6b7280;    /* gray-500 */
+  --muted2:#9ca3af;   /* gray-400 */
+
+  --brand:#ef4444;    /* red-500 */
+  --brand2:#f97316;   /* orange-500 */
+
+  --ok:#16a34a;
+  --warn:#f59e0b;
+  --bad:#dc2626;
+
+  --shadow: 0 14px 40px rgba(17,24,39,.08);
+  --shadow2: 0 8px 20px rgba(17,24,39,.06);
+
+  --r12:12px;
+  --r14:14px;
+  --r16:16px;
+  --r18:18px;
+}
+
+html, body, [class*="css"]{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+/* App background */
+.stApp{
+  background:
+    radial-gradient(900px 450px at 15% 8%, rgba(239,68,68,.10), transparent 55%),
+    radial-gradient(900px 500px at 88% 15%, rgba(249,115,22,.08), transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg));
+  color: var(--text);
+}
+
+/* Page width */
+.block-container{
+  padding-top: 1.8rem;
+  max-width: 1200px;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"]{
+  background: rgba(255,255,255,.72);
+  border-right: 1px solid var(--stroke);
+  backdrop-filter: blur(10px);
+}
+section[data-testid="stSidebar"] .block-container{
+  padding-top: 1.6rem;
+}
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] span{
+  color: var(--muted);
+}
+
+/* Headings */
+h1, h2, h3{
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.small-muted{
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+/* General cards used by app.py */
+.content-card{
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r18);
+  padding: 18px 18px;
+  box-shadow: var(--shadow2);
+}
+
+/* Inputs */
+div[data-baseweb="textarea"] textarea{
+  background: var(--panel) !important;
+  border: 1px solid var(--stroke2) !important;
+  border-radius: var(--r16) !important;
+  color: var(--text) !important;
+  padding: 14px 14px !important;
+  box-shadow: inset 0 1px 0 rgba(17,24,39,.03);
+}
+div[data-baseweb="textarea"] textarea::placeholder{
+  color: var(--muted2) !important;
+}
+div[data-baseweb="textarea"] textarea:focus{
+  outline: none !important;
+  border: 1px solid rgba(239,68,68,.55) !important;
+  box-shadow: 0 0 0 4px rgba(239,68,68,.12) !important;
+}
+
+/* Slider */
+div[data-testid="stSlider"]{
+  padding-top: 6px;
+}
+
+/* Buttons base */
+.stButton>button{
+  width: 100%;
+  border-radius: var(--r14) !important;
+  padding: 0.72rem 1.05rem !important;
+  border: 1px solid var(--stroke2) !important;
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow2);
+  transition: all .16s ease;
+  font-weight: 650;
+}
+.stButton>button:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: rgba(17,24,39,.18) !important;
+}
+.stButton>button:active{
+  transform: translateY(0px);
+}
+
+/* Make the first button in the right column (Run) primary
+   (works with your column that contains Run then Clear) */
+div[data-testid="column"]:has(.stButton) .stButton:first-child>button{
+  background: linear-gradient(135deg, var(--brand), var(--brand2)) !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 50px rgba(239,68,68,.18);
+}
+div[data-testid="column"]:has(.stButton) .stButton:first-child>button:hover{
+  filter: saturate(1.05);
+}
+
+/* Metric row (your HTML) */
+.metric-row{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 14px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+.metric-card{
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r18);
+  padding: 14px 14px;
+  box-shadow: var(--shadow2);
+}
+.metric-label{
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-bottom: 6px;
+}
+.metric-value{
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* Tabs */
+div[data-testid="stTabs"]{
+  margin-top: 14px;
+}
+div[data-testid="stTabs"] button{
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  margin-right: 8px !important;
+  background: rgba(17,24,39,.03) !important;
+  border: 1px solid var(--stroke) !important;
+  color: var(--muted) !important;
+  transition: all .14s ease;
+}
+div[data-testid="stTabs"] button:hover{
+  border-color: rgba(17,24,39,.14) !important;
+  background: rgba(17,24,39,.045) !important;
+}
+div[data-testid="stTabs"] button[aria-selected="true"]{
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  border-color: rgba(239,68,68,.35) !important;
+  box-shadow: 0 8px 18px rgba(239,68,68,.10);
+}
+
+/* Alerts */
+div[data-testid="stAlert"]{
+  border-radius: var(--r18);
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  box-shadow: var(--shadow2);
+}
+
+/* Code blocks */
+div[data-testid="stCodeBlock"]{
+  border-radius: var(--r18) !important;
+  border: 1px solid var(--stroke) !important;
+  background: #0b1220 !important;
+}
+div[data-testid="stCodeBlock"] *{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+/* HR */
+hr{
+  border-color: var(--stroke) !important;
+}
+
+/* Reduce Streamlit chrome */
+header[data-testid="stHeader"]{
+  background: transparent;
+}
+footer{ visibility:hidden; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .metric-row{ grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px){
+  .metric-row{ grid-template-columns: 1fr; }
+}
+
+.content-card:empty {
+    display: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}

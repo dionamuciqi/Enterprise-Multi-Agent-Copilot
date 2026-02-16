@@ -1,21 +1,23 @@
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
 
 def run_writer(question: str, research: list):
-    context = "\n\n".join([
-        f"[{r['source']} p.{r['page']} {r['chunk_id']}]\n{r['text']}"
-        for r in research
-    ])
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+    context = "\n\n".join(
+        [
+            f"[{r['source']} p.{r['page']} {r['chunk_id']}]\n{r['text']}"
+            for r in research
+        ]
+    )
 
     prompt = f"""
 You are an enterprise healthcare AI consultant.
 
 CRITICAL CITATION RULES:
 - Use ONLY citation tags that appear in the Context EXACTLY as written.
-- NEVER write [source ...]. NEVER invent citation tags.
-- Every factual claim must have an inline citation tag.
+- NEVER invent citation tags.
+- Every factual claim must include an inline citation tag.
 
 You must produce a structured response with the following sections:
 
@@ -37,7 +39,7 @@ You must produce a structured response with the following sections:
    - Grounded in provided sources
 
 5. Sources
-   - List all citation tags used (must match tags from Context)
+   - List all citation tags used (must match Context exactly)
 
 Only use information from the context below.
 Do not invent facts.
@@ -49,4 +51,6 @@ Context:
 Question:
 {question}
 """
-    return llm.invoke(prompt).content
+
+    response = llm.invoke(prompt)
+    return response.content

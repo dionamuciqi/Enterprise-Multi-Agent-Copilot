@@ -2,11 +2,12 @@ from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 
 from agents.planner import run_planner
-from agents.researcher import run_research
+from agents.researcher import run_researcher
 from agents.writer import run_writer
 from agents.verifier import run_verifier
 
-MAX_ATTEMPTS = 2
+from utils.security import is_prompt_injection
+
 
 class AgentState(TypedDict, total=False):
     question: str
@@ -21,47 +22,57 @@ class AgentState(TypedDict, total=False):
     final_answer: str
     failure_reason: str
 
+    blocked: bool
+    block_reason: str
+
+
+MAX_ATTEMPTS = 2
+
 
 def planner(state: AgentState):
-    plan = run_planner(state["question"])
-    return {"plan": plan, "attempts": 0}
+    question = state.get("question", "")
+
+    if is_prompt_injection(question):
+        return {
+            "blocked": True,
+            "block_reason": "prompt_injection",
+            "verified": False,
+            "attempts": 0,
+            "final_answer": (
+                "The request attempts to override system rules or access restricted information and cannot be fulfilled. "
+                "Please rephrase your question about hospital operations using the provided documents."
+            ),
+        }
+
+    plan = run_planner(question)
+    return {"plan": plan, "attempts": 0, "blocked": False}
 
 
 def researcher(state: AgentState):
     k = state.get("k", 5)
-    docs = run_research(state["question"], k=k)
+    docs = run_researcher(state.get("question", ""), k=k)
     return {"research": docs}
 
 
 def writer(state: AgentState):
-    draft = run_writer(state["question"], state["research"])
+    draft = run_writer(state.get("question", ""), state.get("research", []))
     return {"draft": draft}
 
 
 def verifier(state: AgentState):
-    verified = run_verifier(state["draft"], state["research"])
-    attempts = state.get("attempts", 0) + 1
-    return {"verified": verified, "attempts": attempts}
+    verified = run_verifier(state.get("draft", ""), state.get("research", []))
 
-    # If not verified, increase k and retry (up to MAX_ATTEMPTS)
+    attempts = state.get("attempts", 0) + 1
+    update: AgentState = {"verified": verified, "attempts": attempts}
+
     if not verified and attempts < MAX_ATTEMPTS:
         update["k"] = min(state.get("k", 5) + 2, 10)
 
-    # If exhausted attempts, set strong fallback (client-safe)
     if not verified and attempts >= MAX_ATTEMPTS:
-        update["failure_reason"] = "Insufficient citation-grounded evidence in the indexed documents."
+        update["failure_reason"] = "Could not produce a citation-grounded answer after retries."
         update["final_answer"] = (
-            "Subject: Unable to produce a citation-grounded answer\n"
-            "To: Hospital Leadership Team\n"
-            "Greeting: Hello,\n\n"
-            "Executive Summary (<=150 words):\n"
-            "I could not produce a reliable answer grounded in the currently indexed documents. "
-            "The retrieved evidence did not provide enough support to make a client-ready recommendation with citations.\n\n"
-            "Recommended Next Steps:\n"
-            "- Add more relevant hospital operations / governance PDFs to the data folder.\n"
-            "- Re-run indexing and try again with a more specific question.\n\n"
-            "Sources Used:\n"
-            "- None (insufficient evidence)\n"
+            "I could not produce an answer with reliable citations from the provided documents. "
+            "Try rephrasing the question or add more relevant documents."
         )
 
     return update
@@ -70,14 +81,23 @@ def verifier(state: AgentState):
 def deliver(state: AgentState):
     if state.get("final_answer"):
         return {"final_answer": state["final_answer"]}
+
     return {"final_answer": state.get("draft", "")}
+
+
+def route_after_planner(state: AgentState) -> str:
+    if state.get("blocked", False):
+        return "deliver"
+    return "researcher"
 
 
 def should_retry(state: AgentState) -> str:
     if state.get("verified", False):
         return "deliver"
+
     if state.get("attempts", 0) < MAX_ATTEMPTS:
         return "researcher"
+
     return "deliver"
 
 
@@ -92,14 +112,25 @@ def build_graph():
 
     graph.set_entry_point("planner")
 
-    graph.add_edge("planner", "researcher")
+    graph.add_conditional_edges(
+        "planner",
+        route_after_planner,
+        {
+            "researcher": "researcher",
+            "deliver": "deliver",
+        },
+    )
+
     graph.add_edge("researcher", "writer")
     graph.add_edge("writer", "verifier")
 
     graph.add_conditional_edges(
         "verifier",
         should_retry,
-        {"researcher": "researcher", "deliver": "deliver"},
+        {
+            "researcher": "researcher",
+            "deliver": "deliver",
+        },
     )
 
     graph.add_edge("deliver", END)

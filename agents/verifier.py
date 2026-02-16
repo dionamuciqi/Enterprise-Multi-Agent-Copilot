@@ -10,7 +10,7 @@ def _extract_exec_summary(text: str) -> str:
 
 
 def run_verifier(draft: str, research: list = None) -> bool:
-    # 1) block fake tag [source ...]
+    # 1) block fake tag 
     if "[source" in draft.lower():
         return False
 
