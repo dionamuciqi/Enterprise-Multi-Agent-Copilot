@@ -4,6 +4,20 @@ Enterprise-grade Multi-Agent AI System for Healthcare
 Built with **LangGraph + Chroma Retrieval + Verified Citations**
 
 ---
+##  Live Deployment
+
+This project is publicly deployed and accessible here:
+
+**Healthcare AI Copilot (Streamlit Cloud)**  
+https://healthcare-agent-copilot.streamlit.app/
+
+The deployed version includes:
+- Multi-agent LangGraph workflow
+- Citation-grounded RAG
+- Prompt injection protection
+- Evaluation test queries
+- Enterprise-style UI
+
 
 ## Table of Contents
 
@@ -254,4 +268,4 @@ Example use cases:
 ## Author
 
 Diona Muçiqi
-Enterprise Multi-Agent Copilot Project
+- Enterprise Multi-Agent Copilot Project
